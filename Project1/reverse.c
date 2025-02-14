@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Tietorakenne yksittäistä linkitetyn listan solmua varten.
 typedef struct lines {
     char *string;
     struct lines *prev;
     struct lines *next;
 } Lines;
 
+// Funktioiden määrittely.
 FILE *open_file(char *filename, char *mode);
 Lines *read_lines(Lines *line, FILE *stream);
 void print_lines(Lines *line, FILE *stream);
@@ -17,15 +19,21 @@ void delete_lines(Lines *line);
 int main(int argc, char *argv[]) {
     Lines *line = NULL;
     FILE *file;
+
+    // Tarkistaa komentoriviparametrien määrän.
     if (argc > 3) {
         fprintf(stderr, "usage: reverse <input> <output>\n");
         exit(1);
     }
+
+    // Ilman argumentteja (stdin -> stdout).
     else if (argc == 1) {
         line = read_lines(line, stdin);
         print_lines(line, stdout);
         delete_lines(line);
     }
+
+    // Yksi argumentti (input tiedosto -> stdout).
     else if (argc == 2) {
         file = open_file(argv[1], "r");
         line = read_lines(line, file);
@@ -33,7 +41,10 @@ int main(int argc, char *argv[]) {
         print_lines(line, stdout);
         delete_lines(line);
     }
+
+    // Kaksi argumenttia (input tiedosto -> output tiedosto).
     else if (argc == 3) {
+        // Varmistaa, etteivät syöte- ja tulostetiedostot ole samat.
         if (strcmp(argv[1], argv[2]) == 0) {
             fprintf(stderr, "Input and output file must differ\n");
             exit(1);
@@ -49,24 +60,30 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+// Avaa tiedoston annetussa tilassa (lukeminen/kirjoittaminen).
 FILE *open_file(char *filename, char *mode) {
     FILE *file;
-    if ((file = fopen(filename, mode)) == NULL) {
+    if ((file = fopen(filename, mode)) == NULL) { // Tiedoston avaaminen epäonnistui.
         fprintf(stderr, "error: cannot open file '%s'\n", filename);
         exit(1);
     }
     return file;
 }
 
+// Lukee rivit annetusta tiedostovirrasta ja tallentaa ne linkitettyyn listaan.
 Lines *read_lines(Lines *line, FILE *stream) {
     char *ptrLine = NULL;
     size_t len = 0;
     Lines *newLine;
+
+    // Lukee tiedoston rivit yksi kerrallaan.
     while (getline(&ptrLine, &len, stream) != -1) {
+        // Varataan muisti uudelle listasolmulle.
         if ((newLine = malloc(sizeof(Lines))) == NULL) {
             fprintf(stderr, "malloc failed\n");
             exit(1);
         }
+        // Varataan muisti rivin sisällölle.
         if ((newLine->string = malloc(strlen(ptrLine) + 1)) == NULL) {
             fprintf(stderr, "malloc failed\n");
             exit(1);
@@ -86,6 +103,7 @@ Lines *read_lines(Lines *line, FILE *stream) {
     return line;
 }
 
+// Tulostaa linkitetyn listan rivit käännetyssä järjestyksessä.
 void print_lines(Lines *line, FILE *stream) {
     Lines *ptr = line;
     while (ptr != NULL) {
@@ -94,6 +112,7 @@ void print_lines(Lines *line, FILE *stream) {
     }
 }
 
+// Vapauttaa linkitetyn listan kaikki muistialueet.
 void delete_lines(Lines *line) {
     Lines *ptr = line;
     while (ptr != NULL) {
